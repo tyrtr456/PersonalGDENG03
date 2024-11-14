@@ -73,6 +73,12 @@
     <Filter Include="Utilities">
       <UniqueIdentifier>{5a2d3fcc-d468-4542-b7eb-14d38e6a8092}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GameEngine\Primitives\Cylinder">
+      <UniqueIdentifier>{15db6364-43cf-416c-82c8-52b8747bd835}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameEngine\Geometry Shader">
+      <UniqueIdentifier>{471cf13f-2754-46da-9dd8-2fdf8193e15e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -126,9 +132,6 @@
     <ClCompile Include="InputSystem.cpp">
       <Filter>GameEngine\Input Listener / System</Filter>
     </ClCompile>
-    <ClCompile Include="SceneCameraHandler.cpp">
-      <Filter>GameEngine\Camera / Scene Handler</Filter>
-    </ClCompile>
     <ClCompile Include="imgui.cpp">
       <Filter>Editor\IMGUI</Filter>
     </ClCompile>
@@ -153,27 +156,44 @@
     <ClCompile Include="UIManager.cpp">
       <Filter>Editor</Filter>
     </ClCompile>
-    <ClCompile Include="UIScreen.cpp">
-      <Filter>Editor\Screens</Filter>
-    </ClCompile>
-    <ClCompile Include="AboutScreen.cpp">
-      <Filter>Editor\Screens</Filter>
-    </ClCompile>
     <ClCompile Include="MenuScreen.cpp">
       <Filter>Editor\Screens</Filter>
     </ClCompile>
-    <ClCompile Include="GraphicsResource.cpp" />
     <ClCompile Include="RenderSystem.cpp">
-      <Filter>GameEngine\Resources / Textures</Filter>
-    </ClCompile>
-    <ClCompile Include="ResourceManager.cpp">
-      <Filter>GameEngine\Resources / Textures</Filter>
-    </ClCompile>
-    <ClCompile Include="TextureManager.cpp">
       <Filter>GameEngine\Resources / Textures</Filter>
     </ClCompile>
     <ClCompile Include="SamplerState.cpp">
       <Filter>GameEngine\Resources / Textures</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneCamera.cpp">
+      <Filter>GameEngine\Camera / Scene Handler</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraManager.cpp">
+      <Filter>GameEngine\Camera / Scene Handler</Filter>
+    </ClCompile>
+    <ClCompile Include="Circle.cpp">
+      <Filter>GameEngine\Primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="Quad.cpp">
+      <Filter>GameEngine\Primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="GameObjectManager.cpp">
+      <Filter>GameEngine\Primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="Vector3D.cpp">
+      <Filter>GameEngine\Matrix and Vector</Filter>
+    </ClCompile>
+    <ClCompile Include="MaterialEditor.cpp">
+      <Filter>GameEngine\Resources / Textures</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>GameEngine\Resources / Textures</Filter>
+    </ClCompile>
+    <ClCompile Include="Cylinder.cpp">
+      <Filter>GameEngine\Primitives\Cylinder</Filter>
+    </ClCompile>
+    <ClCompile Include="GeometryShader.cpp">
+      <Filter>GameEngine\Geometry Shader</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -228,9 +248,6 @@
     <ClInclude Include="Vector4D.h">
       <Filter>GameEngine\Matrix and Vector</Filter>
     </ClInclude>
-    <ClInclude Include="Point.h">
-      <Filter>GameEngine\Matrix and Vector</Filter>
-    </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>GameEngine\Camera / Scene Handler</Filter>
     </ClInclude>
@@ -239,9 +256,6 @@
     </ClInclude>
     <ClInclude Include="InputSystem.h">
       <Filter>GameEngine\Input Listener / System</Filter>
-    </ClInclude>
-    <ClInclude Include="SceneCameraHandler.h">
-      <Filter>GameEngine\Camera / Scene Handler</Filter>
     </ClInclude>
     <ClInclude Include="imconfig.h">
       <Filter>Editor\IMGUI</Filter>
@@ -273,23 +287,13 @@
     <ClInclude Include="UIScreen.h">
       <Filter>Editor\Screens</Filter>
     </ClInclude>
-    <ClInclude Include="AboutScreen.h">
-      <Filter>Editor\Screens</Filter>
-    </ClInclude>
     <ClInclude Include="MenuScreen.h">
       <Filter>Editor\Screens</Filter>
     </ClInclude>
     <ClInclude Include="Prerequisites.h">
       <Filter>GameEngine\Resources / Textures</Filter>
     </ClInclude>
-    <ClInclude Include="GraphicsResource.h" />
     <ClInclude Include="RenderSystem.h">
-      <Filter>GameEngine\Resources / Textures</Filter>
-    </ClInclude>
-    <ClInclude Include="ResourceManager.h">
-      <Filter>GameEngine\Resources / Textures</Filter>
-    </ClInclude>
-    <ClInclude Include="TextureManager.h">
       <Filter>GameEngine\Resources / Textures</Filter>
     </ClInclude>
     <ClInclude Include="SamplerState.h">
@@ -301,12 +305,69 @@
     <ClInclude Include="MathUtil.h">
       <Filter>Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="SceneCamera.h">
+      <Filter>GameEngine\Camera / Scene Handler</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraManager.h">
+      <Filter>GameEngine\Camera / Scene Handler</Filter>
+    </ClInclude>
+    <ClInclude Include="Circle.h">
+      <Filter>GameEngine\Primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="Quad.h">
+      <Filter>GameEngine\Primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObjectManager.h">
+      <Filter>GameEngine\Primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector2D.h">
+      <Filter>GameEngine\Matrix and Vector</Filter>
+    </ClInclude>
+    <ClInclude Include="Vectors.h">
+      <Filter>GameEngine\Matrix and Vector</Filter>
+    </ClInclude>
+    <ClInclude Include="Vertex.h">
+      <Filter>GameEngine\Matrix and Vector</Filter>
+    </ClInclude>
+    <ClInclude Include="PrimitiveType.h">
+      <Filter>GameEngine\Primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="MaterialEditor.h">
+      <Filter>GameEngine\Resources / Textures</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>GameEngine\Resources / Textures</Filter>
+    </ClInclude>
+    <ClInclude Include="Cylinder.h">
+      <Filter>GameEngine\Primitives\Cylinder</Filter>
+    </ClInclude>
+    <ClInclude Include="GeometryShader.h">
+      <Filter>GameEngine\Geometry Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicsResource.h">
+      <Filter>GameEngine\Resources / Textures</Filter>
+    </ClInclude>
+    <ClInclude Include="Constant.h">
+      <Filter>GameEngine\Resources / Textures</Filter>
+    </ClInclude>
+    <ClInclude Include="Singleton.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="VertexShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="PixelShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="GeometryShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="GeometryShader1.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shader.fx">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

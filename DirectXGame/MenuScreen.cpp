@@ -137,6 +137,10 @@ void MenuScreen::showCreditsWindow()
 			
 		);
 
+		ImGui::NewLine();
+
+		ImGui::Separator();
+
 		if (ImGui::Button("OK"))
 			isCreditsOpen = false;
 	}
