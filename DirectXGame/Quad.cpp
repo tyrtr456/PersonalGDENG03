@@ -1,143 +1,90 @@
-#include "Quad.h"
-#include "wrl/client.h"
-#include "string"
+﻿#include "Quad.h"
 
-Quad::Quad(float x, float y, float z) : m_vb(nullptr), m_cb(nullptr), m_vs(nullptr), m_ps(nullptr) //m_samplerState(nullptr), m_texture(nullptr)
+
+Quad::Quad(const std::string& name, const void* shaderByteCode, const size_t sizeShader) : GameObject(name)
 {
-    position1[0] = x;
-    position1[1] = y;
-    position1[2] = z;
+	constexpr int numVertices = 64;
+	Vertex list[] =
+	{
+		//X - Y - Z
+		{Vector3D(-0.5f,-0.5f,0.0f),      Vector3D(0,0,0), Vector2D(0,1)}, // POS1
+		{Vector3D(-0.5f,0.5f,0.0f),        Vector3D(1,1,0),Vector2D(0,0) }, // POS2
+		{ Vector3D(0.5f,-0.5f,0.0f),      Vector3D(0,0,1), Vector2D(0,1) },// POS2
+		{ Vector3D(0.5f,0.5f,0.0f),        Vector3D(1,1,1),Vector2D(1,1) }
+	};
 
+	constexpr UINT indexListSize = ARRAYSIZE(list);
+	vertexBuffer = GraphicsEngine::get()->getRenderSystem()->createVertexBuffer(list, sizeof(Vertex), indexListSize, shaderByteCode, static_cast<UINT>(sizeShader));
+
+	Constant constants;
+	constants.time = 0;
+
+	constantBuffer = GraphicsEngine::get()->getRenderSystem()->createConstantBuffer(&constants, sizeof(Constant));
 }
 
-Quad::~Quad()   
-{
-}
-
-void Quad::init(ID3D11Device* device)
+void Quad::update(const float deltaTime)
 {
 
-    // Define quad vertices with two positions and two colors
-    vertex2D quadVertices[] = {
-        { -0.6f + position1[0], -0.85f + position1[1], 0.0f +  position1[2],   -0.12f + position1[0], -0.11f + position1[1], 0.0f + position1[2], 0,-1,0,  0,1,0},  // Bottom-left
-        { -0.85f + position1[0],  0.45f + position1[1],  0.0f +  position1[2], -0.10f + position1[0], 0.80f + position1[1], 0.0f + position1[2],   1,1,0,  1,1,0},  // Top-left
-        {  1.0f + position1[0], -0.25f + position1[1],  0.0f +  position1[2], 0.30f + position1[0], -0.73f + position1[1], 0.0f + position1[2],  0,0,1,  1,0,0},  // Bottom-right
-        {  0.0f + position1[0],  0.0f + position1[1],  0.0f +  position1[2], 0.88f + position1[0], 0.77f + position1[1], 0.0f + position1[2],    1,0,0,  0,0,1 }   // Top-right
-    };
+	movementSpeed += acceleration;
+	localPosition += moveDirection * movementSpeed * deltaTime;
+	if (localPosition.y <= -5.f)
+	{
+		localPosition = originalPosition;
+		moveDirection.x = randomRangeFloat(-1.f, 1.f);
+		movementSpeed = 1.f;
+	}
 
-    // Load shaders
-    GraphicsEngine* graphEngine = GraphicsEngine::getInstance();
-    void* shader_byte_code = nullptr;
-    size_t shader_size = 0;
-
-    // Create vertex buffer for the quad
-    m_vb = graphEngine->createVertexBuffer();
-
-    // Compile and set vertex shader
-    graphEngine->compileVertexShader(L"VertexShader.hlsl", "vsmain", &shader_byte_code, &shader_size);
-    m_vs = graphEngine->createVertexShader(shader_byte_code, shader_size);
-    m_vb->load(quadVertices, sizeof(vertex2D), ARRAYSIZE(quadVertices), shader_byte_code, shader_size);
-    graphEngine->releaseCompiledShader();
-
-    // Compile and set pixel shader
-    graphEngine->compilePixelShader(L"PixelShader.hlsl", "psmain", &shader_byte_code, &shader_size);
-    m_ps = graphEngine->createPixelShader(shader_byte_code, shader_size);
-    graphEngine->releaseCompiledShader();
-
-
-    /*
-    //load the texture
-    HRESULT hr = DirectX::CreateWICTextureFromFile(
-        graphEngine->getD3DDevice(), // Use the method to get the device
-        textureFilePath.c_str(),
-        nullptr, // Create the texture resource
-        &m_texture);
-
-    if (FAILED(hr)) {
-        // Handle the texture loading error here
-        return;
-    }
-
-    D3D11_SAMPLER_DESC sampDesc;
-    ZeroMemory(&sampDesc, sizeof(sampDesc));
-    sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-    sampDesc.MinLOD = 0;
-    sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
-
-    // Create the sampler state
-    hr = GraphicsEngine::getInstance()->getD3DDevice()->CreateSamplerState(&sampDesc, &m_samplerState);
-    if (FAILED(hr)) {
-        // Handle error
-        return;
-    }*/
-
+	delta += deltaTime;
+	//LogUtils::log(this, "localPosition = " + localPosition.toString());
 }
 
-void Quad::render(float m_delta_time)
+void Quad::draw(const VertexShaderPtr& vertexShader, const GeometryShaderPtr& geometryShader, const Material& material, const RECT clientWindow)
 {
-    GraphicsEngine* graphEngine = GraphicsEngine::getInstance();
-    DeviceContext* deviceContext = graphEngine->getImmediateDeviceContext();
+	const DeviceContextPtr deviceContext = GraphicsEngine::get()->getRenderSystem()->getImmediateDeviceContext();
+	Constant constants;
+	Matrix4x4
+		translateMatrix,
+		scaleMatrix,
+		xMatrix,
+		yMatrix,
+		zMatrix;
 
-    /*
-    if (m_cb != nullptr) {
-        m_cb->update(GraphicsEngine::getInstance()->getImmediateDeviceContext(), &cc);
+	const float windowWidth = static_cast<float>(clientWindow.right - clientWindow.left);
+	const float windowHeight = static_cast<float>(clientWindow.bottom - clientWindow.top);
 
+	translateMatrix.setTranslation(localPosition);
+	scaleMatrix.setScale(localScale);
 
-        GraphicsEngine::getInstance()->getImmediateDeviceContext()->setConstantBuffer(m_vs, m_cb);
-        GraphicsEngine::getInstance()->getImmediateDeviceContext()->setConstantBuffer(m_ps, m_cb);
-    }
+	zMatrix.setRotationZ(localRotation.z);
+	yMatrix.setRotationY(localRotation.y);
+	xMatrix.setRotationX(localRotation.x);
 
-    */
+	constants.world.setIdentity();
+	constants.world *= xMatrix * yMatrix * zMatrix * scaleMatrix * translateMatrix;
 
-     // Bind the sampler state
-    //deviceContext->getContext()->PSSetSamplers(0, 1, &m_samplerState);
+	constants.view.setIdentity();
 
-    /*
-    // Check if m_texture is valid
-    if (m_texture) {
-        deviceContext->getContext()->PSSetShaderResources(0, 1, &m_texture);
-    } else {
-        // Handle error: Texture is not initialized
-        return;
-    }
-    */
-     // Set the vertex and pixel shaders
-    deviceContext->setVertexShader(m_vs);
-    deviceContext->setPixelShader(m_ps);
+	// constants.proj.setOrthographicProjection(
+	// 	windowWidth / 400.f,
+	// 	windowHeight / 400.f,
+	// 	-4.0f,
+	// 	4.0f);
 
-    // Set the vertex buffer and draw
-    deviceContext->setVertexBuffer(m_vb);
-    deviceContext->drawTriangleStrip(m_vb->getSizeVertexList(), 0);
+	const float aspectRatio = (windowWidth * 2.f) / (windowHeight * 2.f);
+	constants.proj.setPerspectiveProjection(aspectRatio, aspectRatio, 0.01f, 10000.0f);
+
+	constants.time = (sin(delta + 1.0f) / 2.0f);
+
+	constantBuffer->update(deviceContext, &constants);
+
+	deviceContext->setConstantBuffer(constantBuffer);
+
+	deviceContext->setVertexBuffer(vertexBuffer);
+	//deviceContext->setIndexBuffer(indexBuffer);
+
+	deviceContext->setVertexShader(vertexShader);
+	deviceContext->setGeometryShader(geometryShader);
+	deviceContext->setPixelShader(material);
+
+	deviceContext->drawTriangleStrip(vertexBuffer->getSizeVertexList(), 0);
 }
-
-bool Quad::release()
-{
-    if (m_vb) m_vb->release();
-    if (m_cb) m_cb->release();
-    if (m_vs) m_vs->release();
-    if (m_ps) m_ps->release();
-    delete this;
-    return true;
-}
-
-
-
-
-
-// Initialize constant buffer
-    //m_cb = graphEngine->createConstantBuffer();
-    //m_constant.m_angle = 0;
-    //m_cb->load(&m_constant, sizeof(constant));
-
-// Update constant buffer with rotation angle
-//m_constant.m_angle = angle;
-//m_cb->update(deviceContext, &m_constant);
-
-
-// Set the constant buffer
-  //deviceContext->setConstantBuffer(m_vs, m_cb);
-  //deviceContext->setConstantBuffer(m_ps, m_cb);

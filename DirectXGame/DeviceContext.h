@@ -1,40 +1,45 @@
 #pragma once
-#pragma once
 #include <d3d11.h>
 
-class SwapChain;
-class VertexBuffer;
-class ConstantBuffer;
-class IndexBuffer;
-class VertexShader;
-class PixelShader;
+#include "GraphicsResource.h"
+#include "Material.h"
+#include "Prerequisites.h"
 
-
-class DeviceContext
+class DeviceContext : public GraphicsResource
 {
 public:
-	DeviceContext(ID3D11DeviceContext* device_context);
-	void clearRenderTargetColor(SwapChain* swap_chain, float red, float green, float blue, float alpha);
-	void setVertexBuffer(VertexBuffer* vertex_buffer);
-	void setIndexBuffer(IndexBuffer* index_buffer);
-	void drawIndexedTriangleList(UINT index_count, UINT start_vertex_index, UINT start_index_location);
-	void drawTriangleList(UINT vertex_count, UINT start_vertex_index);
-	void drawTriangleStrip(UINT vertex_count, UINT start_vertex_index);
-	void drawLineStrip(UINT vertex_count, UINT start_vertex_index);
-
-	void setViewportSize(UINT width, UINT height);
-
-	void setVertexShader(VertexShader* vertex_shader);
-	void setPixelShader(PixelShader* pixel_shader);
-
-	void setConstantBuffer(VertexShader* vertex_shader, ConstantBuffer* buffer);
-	void setConstantBuffer(PixelShader* pixel_shader, ConstantBuffer* buffer);
-	ID3D11DeviceContext* getContext();
-
-	bool release();
+	DeviceContext(ID3D11DeviceContext* deviceContext, RenderSystem* system);
 	~DeviceContext();
+	DeviceContext(const DeviceContext& obj) = default;
+	DeviceContext(DeviceContext&& other) noexcept = default;
+	DeviceContext& operator=(const DeviceContext& other) = default;
+	DeviceContext& operator=(DeviceContext&& other) noexcept = default;
+
+	//ID3D11DeviceContext* getContext() const;
+
+	void clearRenderTargetColor(const SwapChainPtr& swapChain, float red, float green, float blue, float alpha) const;
+	void setVertexBuffer(const VertexBufferPtr& vertexBuffer) const;
+	void setIndexBuffer(const IndexBufferPtr& indexBuffer) const;
+	void drawTriangleList(UINT vertexCount, UINT startVertexIndex) const;
+	void drawIndexedTriangleList(UINT indexCount, UINT startVertexIndex, UINT startIndexLocation) const;
+	void drawTriangleStrip(UINT vertexCount, UINT startVertexIndex) const;
+	void drawLineStrip(UINT vertexCount, UINT startVertexIndex) const;
+
+	void setViewportSize(UINT width, UINT height) const;
+	void setVertexShader(const VertexShaderPtr& vertexShader) const;
+	void setGeometryShader(const GeometryShaderPtr& geometryShader) const;
+	void setPixelShader(const PixelShaderPtr& pixelShader) const;
+	void setTexture(const Material& material);
+
+	void setConstantBuffer(const ConstantBufferPtr& constantBuffer) const;
+
+	bool copyResource(ID3D11Resource* destResource, ID3D11Resource* srcResource) const;
+	bool mapResource(ID3D11Resource* resource, D3D11_MAPPED_SUBRESOURCE& mappedData, UINT subresource, D3D11_MAP mapType, UINT mapFlags) const;
+	void unmapResource(ID3D11Resource* resource, UINT subresource) const;
+
 private:
-	ID3D11DeviceContext* m_device_context;
-private:
+	ID3D11DeviceContext* deviceContext;
+
 	friend class ConstantBuffer;
+	friend class UIManager;
 };

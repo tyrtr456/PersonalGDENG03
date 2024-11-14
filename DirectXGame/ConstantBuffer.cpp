@@ -1,47 +1,32 @@
-#include "ConstantBuffer.h"
-#include "GraphicsEngine.h"
+﻿#include "ConstantBuffer.h"
+
 #include "DeviceContext.h"
-#include <iostream>
-ConstantBuffer::ConstantBuffer()
+#include "GraphicsEngine.h"
+#include "LogUtils.h"
+#include "RenderSystem.h"
+
+ConstantBuffer::ConstantBuffer(const void* buffer, const UINT sizeBuffer, RenderSystem* system) : GraphicsResource(system)
 {
+	D3D11_BUFFER_DESC buffDesc = {};
+	buffDesc.Usage = D3D11_USAGE_DEFAULT;
+	buffDesc.ByteWidth = sizeBuffer;
+	buffDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	buffDesc.CPUAccessFlags = 0;
+	buffDesc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA initData = {};
+	initData.pSysMem = buffer;
+
+	LogUtils::logHResult(this, system->directXDevice->CreateBuffer(&buffDesc, &initData, &constantBuffer));
 }
-
-bool ConstantBuffer::load(void* buffer, UINT size_buffer)
-{
-	if (m_buffer)m_buffer->Release();
-
-	D3D11_BUFFER_DESC buff_desc = {};
-	buff_desc.Usage = D3D11_USAGE_DEFAULT;
-	buff_desc.ByteWidth = size_buffer;
-	buff_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	buff_desc.CPUAccessFlags = 0;
-	buff_desc.MiscFlags = 0;
-
-	D3D11_SUBRESOURCE_DATA init_data = {};
-	init_data.pSysMem = buffer;
-
-	if (FAILED(GraphicsEngine::getInstance()->m_d3d_device->CreateBuffer(&buff_desc, &init_data, &m_buffer)))
-	{
-		return false;
-	}
-
-	return true;
-}
-
-void ConstantBuffer::update(DeviceContext* context, void* buffer)
-{
-	if((m_buffer))
-		context->m_device_context->UpdateSubresource(this->m_buffer, NULL, NULL, buffer, NULL, NULL);
-}
-
-bool ConstantBuffer::release()
-{
-	if (m_buffer)m_buffer->Release();
-	delete this;
-	return true;
-}
-
 
 ConstantBuffer::~ConstantBuffer()
 {
+	if (constantBuffer)
+		constantBuffer->Release();
+}
+
+void ConstantBuffer::update(const DeviceContextPtr& context, const void* buffer) const
+{
+	context->deviceContext->UpdateSubresource(this->constantBuffer, NULL, nullptr, buffer, NULL, NULL);
 }

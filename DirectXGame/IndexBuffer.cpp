@@ -1,48 +1,32 @@
 #include "IndexBuffer.h"
+
+#include "LogUtils.h"
 #include "GraphicsEngine.h"
+#include "RenderSystem.h"
 
-
-IndexBuffer::IndexBuffer() : m_buffer(0)
+IndexBuffer::IndexBuffer(const void* listIndices, const UINT sizeList, RenderSystem* system) : GraphicsResource(system), indexBuffer(nullptr)
 {
+	D3D11_BUFFER_DESC buffDesc = {};
+	buffDesc.Usage = D3D11_USAGE_DEFAULT;
+	buffDesc.ByteWidth = 4 * sizeList;
+	buffDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	buffDesc.CPUAccessFlags = 0;
+	buffDesc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA initData = {};
+	initData.pSysMem = listIndices;
+
+	indexListSize = sizeList;
+
+	LogUtils::logHResult(this, system->directXDevice->CreateBuffer(&buffDesc, &initData, &indexBuffer));
 }
-
-bool IndexBuffer::load(void* list_indices, UINT size_list)
-{
-	if (m_buffer)m_buffer->Release();
-
-	D3D11_BUFFER_DESC buff_desc = {};
-	buff_desc.Usage = D3D11_USAGE_DEFAULT;
-	buff_desc.ByteWidth = 4 * size_list;
-	buff_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	buff_desc.CPUAccessFlags = 0;
-	buff_desc.MiscFlags = 0;
-
-	D3D11_SUBRESOURCE_DATA init_data = {};
-	init_data.pSysMem = list_indices;
-
-	m_size_list = size_list;
-
-	if (FAILED(GraphicsEngine::getInstance()->getD3DDevice()->CreateBuffer(&buff_desc, &init_data, &m_buffer)))
-	{
-		return false;
-	}
-
-	return true;
-}
-
-UINT IndexBuffer::getSizeIndexList()
-{
-	return this->m_size_list;
-}
-
-bool IndexBuffer::release()
-{
-	m_buffer->Release();
-	delete this;
-	return true;
-}
-
 
 IndexBuffer::~IndexBuffer()
 {
+	indexBuffer->Release();
+}
+
+UINT IndexBuffer::getSizeIndexList() const
+{
+	return this->indexListSize;
 }

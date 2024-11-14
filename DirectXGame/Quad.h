@@ -1,46 +1,23 @@
-#pragma once
-#include "GraphicsEngine.h"
+﻿#pragma once
+
 #include "VertexBuffer.h"
-#include "ConstantBuffer.h"
-#include "VertexShader.h"
-#include "PixelShader.h"
-#include "DeviceContext.h"
-#include "WICTextureLoader.h"
-#include <string>
+#include "IndexBuffer.h"
+#include "GameObject.h"
 
-class DeviceContext;
+#include "MathUtil.h"
 
-struct vec3 {
-    float x, y, z;
-};
 
-struct vertex2D {
-
-    vec3 position;
-    vec3 position2;
-    vec3 color;
-    vec3 color2;
-
-};
-
-class Quad
+class Quad : public GameObject
 {
 public:
-    Quad(float x, float y, float z);
-    ~Quad();
+	Quad(const std::string& name, const void* shaderByteCode, size_t sizeShader);
 
-    void init(ID3D11Device* device);
-    void render(float m_delta_time);
-    bool release();
+	void update(float deltaTime) override;
+	void draw(const VertexShaderPtr& vertexShader, const GeometryShaderPtr& geometryShader, const Material& material, RECT clientWindow) override;
 
-private:
-    float position1[3];
-    float m_angle = 0;
-    VertexBuffer* m_vb;
-    ConstantBuffer* m_cb;
-    VertexShader* m_vs;
-    PixelShader* m_ps;
-    //ID3D11ShaderResourceView* m_texture;
-    //ID3D11SamplerState* m_samplerState;
-
+	Vector3D originalPosition = 0.f;
+	Vector3D moveDirection = 0.f;
+	float movementSpeed = 1.f;
+	float acceleration = 0.2f;
+	float delta = 0.f;
 };

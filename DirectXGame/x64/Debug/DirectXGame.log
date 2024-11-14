@@ -1,0 +1,52 @@
+﻿  AppWindow.cpp
+  Camera.cpp
+  CameraManager.cpp
+  ConstantBuffer.cpp
+  Cube.cpp
+  Cylinder.cpp
+E:\GDENG03\DirectXGame\GDENG03-Group3\DirectXGame\Cylinder.cpp(38,16): warning C4267: 'initializing': conversion from 'size_t' to 'UINT', possible loss of data
+E:\GDENG03\DirectXGame\GDENG03-Group3\DirectXGame\Cylinder.cpp(67,21): warning C4267: 'initializing': conversion from 'size_t' to 'UINT', possible loss of data
+  DeviceContext.cpp
+  GameObjectManager.cpp
+  GeometryShader.cpp
+  GraphicsEngine.cpp
+  IndexBuffer.cpp
+  main.cpp
+  Material.cpp
+  MaterialEditor.cpp
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.36.32532\include\xstring(2765,53): warning C4244: 'argument': conversion from 'wchar_t' to 'const _Elem', possible loss of data
+          with
+          [
+              _Elem=char
+          ]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.36.32532\include\xstring(2621,17): message : see reference to function template instantiation 'void std::basic_string<char,std::char_traits<char>,std::allocator<char>>::_Construct_from_iter<wchar_t*,wchar_t*,_Size_type>(_Iter,const _Sent,_Size)' being compiled
+          with
+          [
+              _Size_type=unsigned __int64,
+              _Iter=wchar_t *,
+              _Sent=wchar_t *,
+              _Size=unsigned __int64
+          ]
+E:\GDENG03\DirectXGame\GDENG03-Group3\DirectXGame\MaterialEditor.cpp(271,34): message : see reference to function template instantiation 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string<std::_String_iterator<std::_String_val<std::_Simple_types<_Elem>>>,0>(_Iter,_Iter,const _Alloc &)' being compiled
+          with
+          [
+              _Elem=wchar_t,
+              _Iter=std::_String_iterator<std::_String_val<std::_Simple_types<wchar_t>>>,
+              _Alloc=std::allocator<char>
+          ]
+E:\GDENG03\DirectXGame\GDENG03-Group3\DirectXGame\MaterialEditor.cpp(271,16): message : see the first reference to 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string' in 'MaterialEditor::loadTextureFile'
+  MenuScreen.cpp
+  PixelShader.cpp
+  Plane.cpp
+  GameObject.cpp
+  RenderSystem.cpp
+  SamplerState.cpp
+  Generating Code...
+  Compiling...
+  SceneCamera.cpp
+  SwapChain.cpp
+  UIManager.cpp
+  VertexBuffer.cpp
+  VertexShader.cpp
+  Generating Code...
+  DirectXGame.vcxproj -> E:\GDENG03\DirectXGame\GDENG03-Group3\x64\Debug\DirectXGame.exe

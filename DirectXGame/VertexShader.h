@@ -1,21 +1,22 @@
 #pragma once
 #include <d3d11.h>
 
+#include "GraphicsResource.h"
 
-class GraphicsEngine;
-class DeviceContext;
-
-class VertexShader
+class VertexShader : public GraphicsResource
 {
 public:
-	VertexShader();
-	void release();
+	VertexShader(const void* shaderByteCode, const size_t byteCodeSize, RenderSystem* system);
 	~VertexShader();
+	VertexShader(const VertexShader& obj) = default;
+	VertexShader(VertexShader&& other) noexcept = default;
+	VertexShader& operator=(const VertexShader& other) = default;
+	VertexShader& operator=(VertexShader&& other) noexcept = default;
+
 private:
-	bool init(const void* shader_byte_code, size_t byte_code_size);
-private:
-	ID3D11VertexShader* m_vs;
-private:
-	friend class GraphicsEngine;
+	ID3D11VertexShader* vs;
+
+	friend class RenderSystem;
 	friend class DeviceContext;
 };
+

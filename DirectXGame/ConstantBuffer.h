@@ -1,18 +1,24 @@
-#pragma once
+﻿#pragma once
 #include <d3d11.h>
 
-class DeviceContext;
+#include "Prerequisites.h"
+#include "GraphicsResource.h"
 
-class ConstantBuffer
+class ConstantBuffer : public GraphicsResource
 {
 public:
-	ConstantBuffer();
-	bool load(void* buffer, UINT size_buffer);
-	void update(DeviceContext* context, void* buffer);
-	bool release();
+	ConstantBuffer(const void* buffer, UINT sizeBuffer, RenderSystem* system);
 	~ConstantBuffer();
+	ConstantBuffer(const ConstantBuffer& obj) = default;
+	ConstantBuffer(ConstantBuffer&& other) noexcept = default;
+	ConstantBuffer& operator=(const ConstantBuffer& other) = default;
+	ConstantBuffer& operator=(ConstantBuffer&& other) noexcept = default;
+
+	void update(const DeviceContextPtr& context, const void* buffer) const;
+
 private:
-	ID3D11Buffer* m_buffer;
-private:
+	ID3D11Buffer* constantBuffer;
+
 	friend class DeviceContext;
 };
+

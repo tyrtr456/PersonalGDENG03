@@ -1,57 +1,48 @@
 #pragma once
 #include "GameObject.h"
-#include "InputSystem.h"
-#include "GraphicsEngine.h"
-#include "VertexBuffer.h"
-#include "ConstantBuffer.h"
-#include "DeviceContext.h"
-#include "Matrix4x4.h"
 
-
-class Camera : public GameObject, public InputListener
+class Camera : public GameObject
 {
 public:
-	Camera(std::wstring name);
-	~Camera();
+	Camera(const std::string& name, const bool orthographic, const RECT windowRect)
+		: GameObject(name), orthographic(orthographic), windowRect(windowRect)
+	{
+		const float windowWidth = static_cast<float>(windowRect.right) - static_cast<float>(windowRect.left);
+		const float windowHeight = static_cast<float>(windowRect.bottom) - static_cast<float>(windowRect.top);
+		aspect = windowWidth / windowHeight;
+	}
+
+	// probably going to be empty or can render the gizmos through here
+	void update(const float deltaTime) override;
+	void draw(const VertexShaderPtr& vertexShader, const GeometryShaderPtr& geometryShader, const Material& material,
+	          RECT clientWindow) override;
+
+	Matrix4x4 getView();
+	Matrix4x4 getProjection() const;
+
+protected:
+	bool orthographic = false;
+
+	RECT windowRect;
+
+	// perspective
+	float aspect;
+	float fov = 60.f;
+	float zNear = 0.01f;
+	float zFar = 100.f;
+
+	// orthographic
+	float nearPlane = -10.f;
+	float farPlane = 100.f;
+
+	Matrix4x4 view;
 public:
-	Matrix4x4 getViewMatrix();
-	void update(float deltaTime, RECT windowBounds) override;
-	void draw(int width, int height, float deltaTime, VertexShader* vertexShader, PixelShader* pixelShader) override;
-
-	virtual void onKeyDown(int key) override;
-	virtual void onKeyUp(int key) override;
-	virtual void onMouseMove(const Point mouse_pos) override;
-
-	virtual void onLeftMouseDown(const Point mouse_pos) override;
-	virtual void onLeftMouseUp(const Point mouse_pos) override;
-
-	virtual void onRightMouseDown(const Point mouse_pos) override;
-	virtual void onRightMouseUp(const Point mouse_pos) override;
-
-	bool release();
-
-private:
-	void updateViewMatrix();
-
-private:
-
-	float ticks = 0.0f;
-
-	float mouseDown = false;
-
-	float m_delta_pos = 0.0f;
-	float m_delta_scale = 0.0f;
-	float m_delta_rot = 0.0f;
-
-	float m_rot_x = 0.0f;
-	float m_rot_y = 0.0f;
-
-	float m_scale_cube = 1;
-	float m_forward = 0.0f;
-	float m_rightward = 0.0f;
-
-	Matrix4x4 localMatrix;
-
-
+	// temp
+	// float xRot;
+	// float yRot;
+	// float forward = 0.0f;
+	// float rightward = 0.0f;
+	// float upward = 0.0f;
+	//float squidward = 0.0f;
 };
 

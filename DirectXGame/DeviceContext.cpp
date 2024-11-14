@@ -1,112 +1,144 @@
 #include "DeviceContext.h"
+
+#include "PixelShader.h"
 #include "SwapChain.h"
 #include "VertexBuffer.h"
-#include "IndexBuffer.h"
 #include "ConstantBuffer.h"
 #include "VertexShader.h"
+#include "GeometryShader.h"
+#include "IndexBuffer.h"
 #include "PixelShader.h"
+#include "SamplerState.h"
 
-DeviceContext::DeviceContext(ID3D11DeviceContext* device_context) :m_device_context(device_context)
+DeviceContext::DeviceContext(ID3D11DeviceContext* deviceContext, RenderSystem* system) : GraphicsResource(system), deviceContext(deviceContext)
 {
-}
-
-void DeviceContext::clearRenderTargetColor(SwapChain* swap_chain, float red, float green, float blue, float alpha)
-{
-	if (swap_chain == nullptr || swap_chain->m_rtv == nullptr) {
-		// Log or handle the error as appropriate
-		return;
-	}
-
-	FLOAT clear_color[] = { red,green,blue,alpha };
-
-	m_device_context->ClearRenderTargetView(swap_chain->m_rtv, clear_color);
-
-	m_device_context->ClearDepthStencilView(swap_chain->m_dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
-
-	m_device_context->OMSetRenderTargets(1, &swap_chain->m_rtv, swap_chain->m_dsv);
-}
-
-void DeviceContext::setVertexBuffer(VertexBuffer* vertex_buffer)
-{
-	UINT stride = vertex_buffer->m_size_vertex;
-	UINT offset = 0;
-	m_device_context->IASetVertexBuffers(0, 1, &vertex_buffer->m_buffer, &stride, &offset);
-	m_device_context->IASetInputLayout(vertex_buffer->m_layout);
-}
-
-void DeviceContext::setIndexBuffer(IndexBuffer* index_buffer)
-{
-	m_device_context->IASetIndexBuffer(index_buffer->m_buffer, DXGI_FORMAT_R32_UINT, 0);
-}
-
-void DeviceContext::drawIndexedTriangleList(UINT index_count, UINT start_vertex_index, UINT start_index_location)
-{
-	m_device_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	m_device_context->DrawIndexed(index_count, start_index_location, start_vertex_index);
-}
-
-
-void DeviceContext::drawTriangleList(UINT vertex_count, UINT start_vertex_index)
-{
-	m_device_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	m_device_context->Draw(vertex_count, start_vertex_index);
-}
-
-void DeviceContext::drawTriangleStrip(UINT vertex_count, UINT start_vertex_index)
-{
-	m_device_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-	m_device_context->Draw(vertex_count, start_vertex_index);
-}
-
-void DeviceContext::drawLineStrip(UINT vertex_count, UINT start_vertex_index)
-{
-	m_device_context->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_LINESTRIP);
-	m_device_context->Draw(vertex_count, start_vertex_index);
-}
-
-void DeviceContext::setViewportSize(UINT width, UINT height)
-{
-	D3D11_VIEWPORT vp = {};
-	vp.Width = (FLOAT)width;
-	vp.Height = (FLOAT)height;
-	vp.MinDepth = 0.0f;
-	vp.MaxDepth = 1.0f;
-	m_device_context->RSSetViewports(1, &vp);
-}
-
-void DeviceContext::setVertexShader(VertexShader* vertex_shader)
-{
-	m_device_context->VSSetShader(vertex_shader->m_vs, nullptr, 0);
-}
-
-void DeviceContext::setPixelShader(PixelShader* pixel_shader)
-{
-	m_device_context->PSSetShader(pixel_shader->m_ps, nullptr, 0);
-}
-
-void DeviceContext::setConstantBuffer(VertexShader* vertex_shader, ConstantBuffer* buffer)
-{
-	m_device_context->VSSetConstantBuffers(0, 1, &buffer->m_buffer);
-}
-
-void DeviceContext::setConstantBuffer(PixelShader* pixel_shader, ConstantBuffer* buffer)
-{
-	m_device_context->PSSetConstantBuffers(0, 1, &buffer->m_buffer);
-}
-
-ID3D11DeviceContext* DeviceContext::getContext()
-{
-	return this->m_device_context;
-}
-
-
-bool DeviceContext::release()
-{
-	if(m_device_context)m_device_context->Release();
-	delete this;
-	return true;
 }
 
 DeviceContext::~DeviceContext()
 {
+	deviceContext->Release();
+}
+
+// ID3D11DeviceContext* DeviceContext::getContext() const
+// {
+// 	return this->deviceContext;
+// }
+
+void DeviceContext::clearRenderTargetColor(const SwapChainPtr& swapChain, const float red, const float green, const float blue, const float alpha) const
+{
+	const FLOAT clearColor[] = { red, green, blue, alpha };
+	deviceContext->ClearRenderTargetView(swapChain->renderTargetView, clearColor);
+	deviceContext->ClearDepthStencilView(swapChain->depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
+	deviceContext->OMSetRenderTargets(1, &swapChain->renderTargetView, swapChain->depthStencilView);
+}
+
+void DeviceContext::setVertexBuffer(const VertexBufferPtr& vertexBuffer) const
+{
+	const UINT stride = vertexBuffer->sizeVertex;
+	constexpr UINT offset = 0;
+
+	deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer->buffer, &stride, &offset);
+	deviceContext->IASetInputLayout(vertexBuffer->layout);
+}
+
+void DeviceContext::setIndexBuffer(const IndexBufferPtr& indexBuffer) const
+{
+	deviceContext->IASetIndexBuffer(indexBuffer->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+}
+
+void DeviceContext::drawTriangleList(const UINT vertexCount, const UINT startVertexIndex) const
+{
+	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	deviceContext->Draw(vertexCount, startVertexIndex);
+}
+
+void DeviceContext::drawIndexedTriangleList(const UINT indexCount, const UINT startVertexIndex, const UINT startIndexLocation) const
+{
+	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	deviceContext->DrawIndexed(indexCount, startIndexLocation, startVertexIndex);
+}
+
+void DeviceContext::drawTriangleStrip(const UINT vertexCount, const UINT startVertexIndex) const
+{
+	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+	deviceContext->Draw(vertexCount, startVertexIndex);
+}
+
+void DeviceContext::drawLineStrip(const UINT vertexCount, const UINT startVertexIndex) const
+{
+	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
+	deviceContext->Draw(vertexCount, startVertexIndex);
+}
+
+void DeviceContext::setViewportSize(const UINT width, const UINT height) const
+{
+	D3D11_VIEWPORT vp = {};
+	vp.Width = static_cast<float>(width);
+	vp.Height = static_cast<float>(height);
+	vp.MinDepth = 0.f;
+	vp.MaxDepth = 1.f;
+
+
+	deviceContext->RSSetViewports(1, &vp);
+}
+
+void DeviceContext::setVertexShader(const VertexShaderPtr& vertexShader) const
+{
+	deviceContext->VSSetShader(vertexShader->vs, nullptr, 0);
+}
+
+void DeviceContext::setGeometryShader(const GeometryShaderPtr& geometryShader) const
+{
+	deviceContext->GSSetShader(geometryShader->gs, nullptr, 0);
+}
+
+void DeviceContext::setPixelShader(const PixelShaderPtr& pixelShader) const
+{
+	deviceContext->PSSetShader(pixelShader->ps, nullptr, 0);
+}
+
+void DeviceContext::setTexture(const Material& material)
+{
+	deviceContext->VSSetShaderResources(0, 1, material.albedoTexture.GetAddressOf());
+	deviceContext->VSSetShaderResources(1, 1, material.normalTexture.GetAddressOf());
+	deviceContext->VSSetShaderResources(2, 1, material.metallicTexture.GetAddressOf());
+	deviceContext->VSSetShaderResources(3, 1, material.smoothnessTexture.GetAddressOf());
+	deviceContext->VSSetSamplers(0, 1, &material.samplerState->m_sampler_state);
+
+	deviceContext->PSSetShaderResources(0, 1, material.albedoTexture.GetAddressOf());
+	deviceContext->PSSetShaderResources(1, 1, material.normalTexture.GetAddressOf());
+	deviceContext->PSSetShaderResources(2, 1, material.metallicTexture.GetAddressOf());
+	deviceContext->PSSetShaderResources(3, 1, material.smoothnessTexture.GetAddressOf());
+	deviceContext->PSSetSamplers(0, 1, &material.samplerState->m_sampler_state);
+}
+
+void DeviceContext::setConstantBuffer(const ConstantBufferPtr& constantBuffer) const
+{
+	deviceContext->VSSetConstantBuffers(0, 1, &constantBuffer->constantBuffer);
+	deviceContext->GSSetConstantBuffers(0, 1, &constantBuffer->constantBuffer);
+	deviceContext->PSSetConstantBuffers(0, 1, &constantBuffer->constantBuffer);
+
+}
+
+bool DeviceContext::copyResource(ID3D11Resource* destResource, ID3D11Resource* srcResource) const
+{
+	if (!deviceContext || !destResource || !srcResource) return false;
+	deviceContext->CopyResource(destResource, srcResource);
+	return true;
+}
+
+bool DeviceContext::mapResource(ID3D11Resource* resource, D3D11_MAPPED_SUBRESOURCE& mappedData, UINT subresource,
+	D3D11_MAP mapType, UINT mapFlags) const
+{
+	if (!deviceContext || !resource) return false;
+	HRESULT hr = deviceContext->Map(resource, subresource, mapType, mapFlags, &mappedData);
+	return SUCCEEDED(hr);
+}
+
+void DeviceContext::unmapResource(ID3D11Resource* resource, UINT subresource) const
+{
+	if (deviceContext && resource) deviceContext->Unmap(resource, subresource);
 }

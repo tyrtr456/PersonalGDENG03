@@ -1,53 +1,37 @@
 #pragma once
-#include "InputListener.h"
-#include "Windows.h"
 #include <unordered_set>
-#include "Point.h"
+#include <Windows.h>
+#include "InputListener.h"
+#include "LogUtils.h"
+#include "Vector2D.h"
 
 class InputSystem
 {
 public:
-	typedef std::vector<InputListener*> List;
+	static InputSystem* get();
 
-	static InputSystem* getInstance();
-
-	static void initialize();
-	static void destroy();
-
+	void update();
 	void addListener(InputListener* listener);
 	void removeListener(InputListener* listener);
-	void update();
+	static void setCursorPosition(const Vector2D& pos);
+	static void showCursor(const bool& show);
+	void setEnabled(const bool& enabled);
 
-
-	bool isKeyDown(int key);
-	bool isKeyUp(int key);
-
-	void setCursorPosition(const Point& pos);
-	void showCursor(bool show);
-
+	InputSystem(InputSystem const&) = delete;
+	InputSystem& operator=(InputSystem const&) = delete;
+	InputSystem(InputSystem&& other) noexcept = delete;
+	InputSystem& operator=(InputSystem&& other) noexcept = delete;
 
 private:
 	InputSystem();
 	~InputSystem();
-	InputSystem(InputSystem const&) {};
-	InputSystem& operator*(InputSystem const&) {};
-	bool release();
-
-private:
-	void callOnKeyDown(int key);
-	void callOnKeyUp(int key);
-
-	void callOnMouseMove(Point deltaPt);
-	void callOnLeftMouseDown(Point deltaPt);
-	void callOnLeftMouseUp(Point deltaPt);
-	void callOnRightMouseDown(Point deltaPt);
-	void callOnRightMouseUp(Point deltaPt);
-
 	static InputSystem* sharedInstance;
-	List inputListenerList;
-	unsigned char keyStates[256] = {};
-	unsigned char oldKeyStates[256] = {};
-	Point m_old_mouse_pos;
-	bool m_first_time = true;
 
+	std::unordered_set<InputListener*> setListeners;
+	unsigned char keysState[256] = {};
+	unsigned char oldKeysState[256] = {};
+	Vector2D oldMousePosition;
+	bool firstMouseMove = true;
+
+	bool isEnabled = true;
 };

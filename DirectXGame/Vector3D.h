@@ -1,43 +1,167 @@
 #pragma once
+#include <cmath>
+#include <ostream>
+#include <string>
 
 class Vector3D
 {
 public:
-	Vector3D() :m_x(0), m_y(0), m_z(0)
+	Vector3D() : x(0), y(0), z(0) {}
+	Vector3D(const float n) : x(n), y(n), z(n) {}
+	Vector3D(const float x, const float y) : x(x), y(y), z(0) {}
+	Vector3D(const float x, const float y, const float z) : x(x), y(y), z(z) {}
+	// Vector3D(const int x, const int y, const int z) : x(x), y(y), z(z) {}
+	Vector3D(const Vector3D& vector) : x(vector.x), y(vector.y), z(vector.z) {}
+	~Vector3D() = default;
+
+	std::string toString() const
 	{
-	}
-	Vector3D(float x, float y, float z) :m_x(x), m_y(y), m_z(z)
-	{
-	}
-	Vector3D(const Vector3D& vector) :m_x(vector.m_x), m_y(vector.m_y), m_z(vector.m_z)
-	{
+		return "(" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + ")";
 	}
 
-	static Vector3D lerp(const Vector3D& start, const Vector3D& end, float delta)
+	float magnitude() const
+	{
+		return sqrt((x * x + y * y + z * z));
+	}
+
+	Vector3D normalize() const
+	{
+		const float mag = this->magnitude();
+		return *this / mag;
+		// return this->scaleVector3D((1 / this->magnitude()));
+	}
+
+	static Vector3D linearInterpolate(const Vector3D& start, const Vector3D& end, const float delta)
 	{
 		Vector3D v;
-		v.m_x = start.m_x * (1.0f - delta) + end.m_x * (delta);
-		v.m_y = start.m_y * (1.0f - delta) + end.m_y * (delta);
-		v.m_z = start.m_z * (1.0f - delta) + end.m_z * (delta);
+		v.x = start.x * (1.0f - delta) + end.x * (delta);
+		v.y = start.y * (1.0f - delta) + end.y * (delta);
+		v.z = start.z * (1.0f - delta) + end.z * (delta);
 		return v;
 	}
 
-	Vector3D operator *(float num)
+	static Vector3D absolute(const Vector3D& vector)
 	{
-		return Vector3D(m_x * num, m_y * num, m_z * num);
+		return { abs(vector.x), abs(vector.y), abs(vector.z) };
 	}
 
-	Vector3D operator +(Vector3D vec)
+	Vector3D operator+(const Vector3D& addend) const
 	{
-		return Vector3D(m_x + vec.m_x, m_y + vec.m_y, m_z + vec.m_z);
+		return { this->x + addend.x, this->y + addend.y, this->z + addend.z };
 	}
 
-
-
-	~Vector3D()
+	Vector3D operator-(const Vector3D& subtrahend) const
 	{
+		return { this->x - subtrahend.x, this->y - subtrahend.y, this->z - subtrahend.z };
 	}
 
+	Vector3D operator*(const Vector3D& crossMultiplier) const
+		// cross product w/ vector3D
+	{
+		return {
+			(this->y * crossMultiplier.z) - (this->z * crossMultiplier.y),
+			(this->z * crossMultiplier.x) - (this->x * crossMultiplier.z),
+			(this->x * crossMultiplier.y) - (this->y * crossMultiplier.x) };
+	}
+
+	// Vector3D operator*(const Matrix& m) // cross product w/ matrix
+	// {
+	// 	float mult[4] = { this->x, this->y, this->z, 1 };
+	// 	float result[4] = { 0, 0, 0, 1 };
+	//
+	// 	if (m.getSize().at(1) != 4)
+	// 		return Vector3D();
+	//
+	// 	for (size_t i = 0; i < (size_t)m.getSize().at(0); i++)
+	// 	{
+	// 		for (size_t j = 0; j < 4; j++)
+	// 		{
+	// 			result[i] += (m.getData(i, j) * mult[j]);
+	// 			// std::cout << result[i] << " += " << m.getData(i, j) << " * " << mult[j];
+	// 			// std::cout << ", ";
+	// 		}
+	// 		// std::cout << "\n";
+	// 	}
+	//
+	// 	return Vector3D(result[0], result[1], result[2]);
+	// }
+
+	Vector3D operator*(const float scalar) const
+		// scalar multiplication
+	{
+		return { this->x * scalar, this->y * scalar, this->z * scalar };
+	}
+
+	Vector3D operator/(const float denominator) const
+		// scalar division
+	{
+		return { this->x / denominator, this->y / denominator, this->z / denominator };
+	}
+
+	Vector3D& operator+=(const Vector3D& addend)
+	{
+		this->x += addend.x;
+		this->y += addend.y;
+		this->z += addend.z;
+		return *this;
+	}
+
+	Vector3D& operator-=(const Vector3D& subtrahend)
+	{
+		this->x -= subtrahend.x;
+		this->y -= subtrahend.y;
+		this->z -= subtrahend.z;
+		return *this;
+	}
+
+	bool operator==(const Vector3D& vector) const
+	{
+		return
+			fabs(this->x - vector.x) > DBL_EPSILON &&
+			fabs(this->y - vector.y) > DBL_EPSILON &&
+			fabs(this->z - vector.z) > DBL_EPSILON;
+	}
+
+	bool operator!=(const Vector3D& vector) const
+	{
+		return !(*this == vector);
+	}
+
+	//Vector3D& operator*=(const Vector3D& multiplier)
+	//{
+	//	this->x *= multiplier.x;
+	//	this->y *= multiplier.y;
+	//	this->z *= multiplier.z;
+	//	return *this;
+	//}
+
+	//Vector3D& operator/=(const Vector3D& divisor)
+	//{
+	//	this->x /= divisor.x;
+	//	this->y /= divisor.y;
+	//	this->z /= divisor.z;
+	//	return *this;
+	//}
+
+	//friend void swap(Vector3D& first, Vector3D& second) noexcept
+	//{
+	//	// enable ADL (not necessary in our case, but good practice)
+	//	using std::swap;
+
+	//	// by swapping the members of two objects,
+	//	// the two objects are effectively swapped
+	//	swap(first.x, second.x);
+	//	swap(first.y, second.y);
+	//	swap(first.z, second.z);
+	//}
+
+	friend std::ostream& operator<<(std::ostream& os, const Vector3D& vec)
+	{
+		os << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
+		return os;
+	}
 public:
-	float m_x, m_y, m_z;
+	float x, y, z;
+
+	static const Vector3D zero;
 };

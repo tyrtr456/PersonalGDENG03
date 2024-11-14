@@ -1,72 +1,79 @@
 struct VS_INPUT
 {
-    float4 position : POSITION;
+    float4 pos : POSITION;
     float3 color : COLOR;
-    float3 color1 : COLOR1;
+    float2 texcoord : TEXCOORD;
 };
 
 struct VS_OUTPUT
 {
-    float4 position : SV_POSITION;
+    float4 pos : POSITION;
     float3 color : COLOR;
-    float3 color1 : COLOR1;
+    float2 texcoord : TEXCOORD;
+    float3 directionToCamera : TEXCOORD1;
+    float fogFactor : FOG;
 };
-
 
 cbuffer constant : register(b0)
 {
-    row_major float4x4 m_world;
-    row_major float4x4 m_view;
-    row_major float4x4 m_proj;
-    unsigned int m_time;
+    row_major float4x4 world;
+    row_major float4x4 view;
+    row_major float4x4 proj;
+    float3 cameraPos;
+    float time;
+
+    float3 color;         // albedo color
+    float metallic;       // metallic strength
+    float smoothness;     // specular strength
+    float flatness;       // normal flatness
+    float2 tiling;        // texture tiling
+    float2 offset;        // texture offset
+
+    float hasAlbedoMap;
+    float hasNormalMap;
+    float hasMetallicMap;
+    float hasSmoothnessMap;
 };
 
+// Texture Resources
+Texture2D albedoMap : register(t0);
+Texture2D normalMap : register(t1);
+Texture2D metallicMap : register(t2);
+Texture2D smoothnessMap : register(t3);
+
+// Sampler for Textures
+SamplerState samplerState : register(s0);
 
 
-VS_OUTPUT vsmain(VS_INPUT input)
+float getFogFactor(float d)
+{
+    const float fogMax = 10.0;
+    const float fogMin = 1.0;
+
+    return clamp((d - fogMin) / (fogMax - fogMin), 0, 1);
+}
+
+VS_OUTPUT main(VS_INPUT input)
 {
     VS_OUTPUT output = (VS_OUTPUT) 0;
-	
-    //output.position = lerp(input.position, input.position1, (float)((sin((float)(m_time / (float)1000.0f)) + 1.0f) / 2.0f));
-	
-	//WORLD SPACE
-    output.position = mul(input.position, m_world);
-    //output.position = mul(lerp(input.position, input.position1, (float) ((sin((float) (m_time / (float) 1000.0f)) + 1.0f) / 2.0f)), m_world);
-	//VIEW SPACE
-    output.position = mul(output.position, m_view);
-	//SCREEN SPACE
-    output.position = mul(output.position, m_proj);
 
+    // World Space
+    output.pos = mul(input.pos, world);
+    // Calculate linear fog    
+    output.fogFactor = getFogFactor(distance(cameraPos, output.pos));
+    output.directionToCamera = normalize(cameraPos - output.pos);
+
+	// View Space
+    output.pos = mul(output.pos, view);
+
+    // Screen Space
+    output.pos = mul(output.pos, proj);
 
     output.color = input.color;
-    output.color1 = input.color1;
+    
+    output.texcoord = input.texcoord * tiling + offset;
+
+
     return output;
 }
 
- //float4 position1 : POSITION1;
-  //float3 color : COLOR;
- //float3 color1 : COLOR1;
-
-
- //float3 color : COLOR;
- //float3 color1 : COLOR1;
-
-
-/*cbuffer constant : register(b0)
-{
-    float m_angle;
-};*/
-
-
-
-/*VS_OUTPUT vsmain(VS_INPUT input)
-{
-    VS_OUTPUT output = (VS_OUTPUT) 0;
-	
-    output.position = lerp(input.position, input.position1, (sin(m_angle) + 1.0f) / 2.0f);
-    output.color = input.color;
-    output.color1 = input.color1;
-    return output;
-    
-
-}*/

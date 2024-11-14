@@ -1,58 +1,71 @@
 #pragma once
-using namespace std;
 
-#include <string>;
-#include <Windows.h>
-
-#include "Matrix4x4.h"
-
-class VertexShader;
-class PixelShader;
-
-struct vertex
-{
-	Vector3D position;
-	Vector3D color;
-	Vector3D color1;
-};
-
-
-__declspec(align(16))
-struct CBData
-{
-	Matrix4x4 m_world;
-	Matrix4x4 m_view;
-	Matrix4x4 m_proj;
-	unsigned int m_time;
-};
+#include <vector>
+#include <corecrt_math_defines.h>
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
+#include "GraphicsEngine.h"
+#include "DeviceContext.h"
+#include "Vectors.h"
+#include "Vertex.h"
+#include "Constant.h"
+#include "ConstantBuffer.h"
+#include "LogUtils.h"
+#include "Material.h"
 
 class GameObject
 {
 public:
-	GameObject(std::wstring name);
-	~GameObject();
+	explicit GameObject(std::string name) : name(std::move(name))
+	{
+	}
 
-	virtual void update(float deltaTime, RECT windowBounds) = 0;
-	virtual void draw(int width, int height, float deltaTime, VertexShader* vertexShader, PixelShader* pixelShader) = 0;
+	virtual void update(float deltaTime) = 0;
+	virtual void draw(
+		const VertexShaderPtr& vertexShader,
+		const GeometryShaderPtr& geometryShader,
+		const Material& material,
+		RECT clientWindow);
 
-public:
-	void setPosition(float x, float y, float z);
-	void setPosition(Vector3D pos);
-	Vector3D getLocalPosition();
+	void setPosition(const Vector3D& position) { localPosition = position; }
+	void translate(const Vector3D& translation) { localPosition += translation; }
 
-	void setScale(float x, float y, float z);
-	void setScale(Vector3D scale);
-	Vector3D getLocalScale();
+	void setScale(const Vector3D& scale) { localScale = scale; }
+	void scale(const Vector3D& scale) { localScale += scale; }
 
-	void setRotation(float x, float y, float z);
-	void setRotation(Vector3D rot);
-	Vector3D getLocalRotation();
+	void setRotation(const Vector3D& rotation) { localRotation = rotation; }
+	void rotate(const Vector3D& rotation) { localRotation += rotation; }
+
+	void setEnabled(const bool enabled) { isEnabled = enabled; }
+
+	void setColor(const Vector3D& newColor)
+	{
+		LogUtils::log("Setting color " + color.toString() + " to: " + newColor.toString());
+		color = newColor;
+		LogUtils::log("color: " + color.toString());
+	}
+
+	std::string getName() { return name; }
+	bool getEnabled() const { return isEnabled; }
+	Vector3D getPosition() { return localPosition; }
+	Vector3D getScale() { return localScale; }
+	Vector3D getRotation() { return localRotation; }
+	Vector3D getColor() { return color; }
 
 protected:
-	std::wstring name;
-	Vector3D localRotation;
-	Vector3D localPosition;
-	Vector3D localScale;
+	float elapsedTime = 0.f;
 
+	std::string name;
+	bool isEnabled = true;
+
+	Vector3D localScale = 1.f;
+	Vector3D localPosition = 0.f;
+	Vector3D localRotation = 0.f;
+	//Matrix4x4 localMatrix;
+
+	Vector3D color;
+
+	VertexBufferPtr vertexBuffer = nullptr;
+	IndexBufferPtr indexBuffer = nullptr;
+	ConstantBufferPtr constantBuffer = nullptr;
 };
-

@@ -1,100 +1,71 @@
 #include "InputSystem.h"
 
+#include "imgui.h"
+
 InputSystem* InputSystem::sharedInstance = nullptr;
 
-InputSystem* InputSystem::getInstance()
-{
-	return sharedInstance;
-}
+InputSystem::InputSystem()
+= default;
 
-void InputSystem::initialize()
-{
-	sharedInstance = new InputSystem();
-}
-
-void InputSystem::destroy()
-{
-	if (sharedInstance != NULL) {
-		sharedInstance->release();
-		delete sharedInstance;
-	}
-}
-
-InputSystem::InputSystem() {
-
-}
 
 InputSystem::~InputSystem()
 {
-}
-
-void InputSystem::addListener(InputListener* listener)
-{
-	// Check if the listener is already in the list
-	if (std::find(inputListenerList.begin(), inputListenerList.end(), listener) == inputListenerList.end())
-	{
-		inputListenerList.push_back(listener);  // Add the listener if not already present
-	}
-}
-
-void InputSystem::removeListener(InputListener* listener)
-{
-	// Use std::remove to remove the listener and erase the "removed" element
-	std::vector<InputListener*>::iterator it = std::remove(inputListenerList.begin(), inputListenerList.end(), listener);
-	if (it != inputListenerList.end())
-	{
-		inputListenerList.erase(it, inputListenerList.end());
-	}
+	delete sharedInstance;
 }
 
 void InputSystem::update()
 {
-	POINT current_mouse_pos = {};
-	::GetCursorPos(&current_mouse_pos);
+	if (!isEnabled)
+		return;
 
-	if (m_first_time)
+	POINT currentMousePoint;
+	::GetCursorPos(&currentMousePoint);
+	//LogUtils::log(this, "Getting cursor pos");
+	const Vector2D currentMousePosition = currentMousePoint;
+	const ImGuiIO& io = ImGui::GetIO();
+
+	if (firstMouseMove)
 	{
-		m_old_mouse_pos = Point(current_mouse_pos.x, current_mouse_pos.y);
-		m_first_time = false;
+		oldMousePosition = currentMousePosition;
+		firstMouseMove = false;
 	}
 
-	if (current_mouse_pos.x != m_old_mouse_pos.m_x || current_mouse_pos.y != m_old_mouse_pos.m_y)
+	if (currentMousePosition != oldMousePosition)
 	{
-		//THERE IS MOUSE MOVE EVENT
-		std::vector<InputListener*>::iterator it = inputListenerList.begin();
+		std::unordered_set<InputListener*>::iterator it = setListeners.begin();
 
-		while (it != inputListenerList.end())
+		while (it != setListeners.end())
 		{
-			(*it)->onMouseMove(Point(current_mouse_pos.x, current_mouse_pos.y));
+			(*it)->onMouseMove(currentMousePosition);
 			++it;
 		}
 	}
-	m_old_mouse_pos = Point(current_mouse_pos.x, current_mouse_pos.y);
+	oldMousePosition = currentMousePosition;
 
-
-
-	if (::GetKeyboardState(keyStates))
+	if (::GetKeyboardState(keysState))
 	{
+		//LogUtils::log(this, "Getting keyboard state");
 		for (unsigned int i = 0; i < 256; i++)
 		{
 			// KEY IS DOWN
-			if (keyStates[i] & 0x80)
+			if (keysState[i] & 0x80)
 			{
-				std::vector<InputListener*>::iterator it = inputListenerList.begin();
+				//LogUtils::log(this, "key is down");
+				std::unordered_set<InputListener*>::iterator it = setListeners.begin();
 
-				while (it != inputListenerList.end())
+				while (it != setListeners.end())
 				{
-					if (i == VK_LBUTTON)
+					if (i == VK_LBUTTON && !io.WantCaptureMouse)
 					{
-						if (keyStates[i] != oldKeyStates[i])
-							(*it)->onLeftMouseDown(Point(current_mouse_pos.x, current_mouse_pos.y));
+						if (keysState[i] != oldKeysState[i])
+							(*it)->onLeftMouseDown(Vector2D(currentMousePosition.x, currentMousePosition.y));
 					}
-					else if (i == VK_RBUTTON)
+					else if (i == VK_RBUTTON && !io.WantCaptureMouse)
 					{
-						if (keyStates[i] != oldKeyStates[i])
-							(*it)->onRightMouseDown(Point(current_mouse_pos.x, current_mouse_pos.y));
+						if (keysState[i] != oldKeysState[i])
+							(*it)->onRightMouseDown(Vector2D(currentMousePosition.x, currentMousePosition.y));
 					}
-					else
+					else if (!io.WantCaptureKeyboard)
 						(*it)->onKeyDown(i);
 
 					++it;
@@ -102,17 +73,18 @@ void InputSystem::update()
 			}
 			else // KEY IS UP
 			{
-				if (keyStates[i] != oldKeyStates[i])
+				if (keysState[i] != oldKeysState[i])
 				{
-					std::vector<InputListener*>::iterator it = inputListenerList.begin();
+					//LogUtils::log(this, "key is up");
+					std::unordered_set<InputListener*>::iterator it = setListeners.begin();
 
-					while (it != inputListenerList.end())
+					while (it != setListeners.end())
 					{
-						if (i == VK_LBUTTON)
-							(*it)->onLeftMouseUp(Point(current_mouse_pos.x, current_mouse_pos.y));
-						else if (i == VK_RBUTTON)
-							(*it)->onRightMouseUp(Point(current_mouse_pos.x, current_mouse_pos.y));
-						else
+						if (i == VK_LBUTTON && !io.WantCaptureMouse)
+							(*it)->onLeftMouseUp(Vector2D(currentMousePosition.x, currentMousePosition.y));
+						else if (i == VK_RBUTTON && !io.WantCaptureMouse)
+							(*it)->onRightMouseUp(Vector2D(currentMousePosition.x, currentMousePosition.y));
+						else if (!io.WantCaptureKeyboard)
 							(*it)->onKeyUp(i);
 
 						++it;
@@ -122,50 +94,42 @@ void InputSystem::update()
 			}
 
 		}
+
+		//LogUtils::log(this, "Copying key state");
 		// store current keys state to old keys state buffer
-		::memcpy(oldKeyStates, keyStates, sizeof(unsigned char) * 256);
+		::memcpy(oldKeysState, keysState, sizeof(unsigned char) * 256);
 	}
 }
 
-void InputSystem::setCursorPosition(const Point& pos)
+void InputSystem::addListener(InputListener* listener)
 {
-	::SetCursorPos(pos.m_x, pos.m_y);
+	setListeners.insert(listener);
 }
 
-void InputSystem::showCursor(bool show)
+void InputSystem::removeListener(InputListener* listener)
+{
+	setListeners.erase(listener);
+}
+
+void InputSystem::setCursorPosition(const Vector2D& pos)
+{
+	::SetCursorPos(static_cast<int>(pos.x), static_cast<int>(pos.y));
+}
+
+void InputSystem::showCursor(const bool& show)
 {
 	::ShowCursor(show);
 }
 
-bool InputSystem::isKeyDown(int key)
+void InputSystem::setEnabled(const bool& enabled)
 {
-	if (::GetKeyboardState(keyStates))
-
-	if (keyStates[key] & 0x80) {
-		return true;
-	}
-
-	else
-		return false;
+	isEnabled = enabled;
 }
 
-bool InputSystem::isKeyUp(int key)
+InputSystem* InputSystem::get()
 {
-	if (::GetKeyboardState(keyStates))
+	if (!sharedInstance)
+		sharedInstance = new InputSystem();
 
-		if (keyStates[key] & 0x80) {
-			return false;
-		}
-
-		else
-			return true;
-}
-
-
-bool InputSystem::release()
-{
-	if(!inputListenerList.empty())
-		inputListenerList.clear();
-	
-	return false;
+	return sharedInstance;
 }

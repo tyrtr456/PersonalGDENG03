@@ -1,61 +1,65 @@
 #include "GameObject.h"
 
-GameObject::GameObject(std::wstring name)
+#include <iostream>
+
+#include "CameraManager.h"
+#include "ConstantBuffer.h"
+
+void GameObject::draw(const VertexShaderPtr& vertexShader, const GeometryShaderPtr& geometryShader, const Material& material,
+                      RECT clientWindow)
 {
-	this->name = name;
-	this->localPosition = Vector3D(0, 0, 0);
-	this->localRotation = Vector3D(0, 0, 0);
-	this->localScale = Vector3D(1, 1, 1);
+	const DeviceContextPtr deviceContext = GraphicsEngine::get()->getRenderSystem()->getImmediateDeviceContext();
+	Constant constants;
+	Matrix4x4
+		translateMatrix,
+		scaleMatrix,
+		xMatrix,
+		yMatrix,
+		zMatrix;
 
+	translateMatrix.setTranslation(localPosition);
+	scaleMatrix.setScale(localScale);
 
-}
+	zMatrix.setRotationZ(localRotation.z);
+	yMatrix.setRotationY(localRotation.y);
+	xMatrix.setRotationX(localRotation.x);
 
-GameObject::~GameObject()
-{
-}
+	//LogUtils::log(this, "Pos: " + CameraManager::getInstance()->activeCamera->getPosition().toString());
+	constants.cameraPos = CameraManager::getInstance()->activeCamera->getPosition();
+	constants.world.setIdentity();
 
-void GameObject::setPosition(float x, float y, float z)
-{
-	this->localPosition = Vector3D(x,y,z);
-}
+	const Matrix4x4 rotateMatrix = xMatrix * yMatrix * zMatrix;
+	constants.world = scaleMatrix * rotateMatrix * translateMatrix;
 
-void GameObject::setPosition(Vector3D pos)
-{
-	this->localPosition = pos;
-}
+	constants.view = CameraManager::getInstance()->activeCamera->getView();
+	constants.proj = CameraManager::getInstance()->activeCamera->getProjection();
 
-Vector3D GameObject::getLocalPosition()
-{
-	return this->localPosition;
-}
+	constants.time = 0;
 
-void GameObject::setScale(float x, float y, float z)
-{
-	this->localScale = Vector3D(x, y, z);
+	constants.color = Vector3D(material.color.x, material.color.y, material.color.z);
+	constants.metallic = material.metallic;
+	constants.smoothness = material.smoothness;
+	constants.flatness = material.flatness;
+	constants.tiling = material.tiling;
+	constants.offset = material.offset;
 
-}
+	constants.hasAlbedoMap = material.albedoTexture != nullptr;
+	constants.hasMetallicMap = material.metallicTexture != nullptr;
+	constants.hasSmoothnessMap = material.smoothnessTexture != nullptr;
+	constants.hasNormalMap = material.normalTexture != nullptr;
 
-void GameObject::setScale(Vector3D scale)
-{
-	this->localScale = scale;
-}
+	constantBuffer->update(deviceContext, &constants);
 
-Vector3D GameObject::getLocalScale()
-{
-	return this->localScale;
-}
+	deviceContext->setConstantBuffer(constantBuffer);
 
-void GameObject::setRotation(float x, float y, float z)
-{
-	this->localRotation = Vector3D(x, y, z);
-}
+	deviceContext->setVertexBuffer(vertexBuffer);
+	deviceContext->setIndexBuffer(indexBuffer);
 
-void GameObject::setRotation(Vector3D rot)
-{
-	this->localRotation = rot;
-}
+	deviceContext->setVertexShader(vertexShader);
+	deviceContext->setGeometryShader(geometryShader);
+	deviceContext->setPixelShader(material.getPixelShader());
 
-Vector3D GameObject::getLocalRotation()
-{
-	return this->localRotation;
+	deviceContext->setTexture(material);
+
+	deviceContext->drawIndexedTriangleList(indexBuffer->getSizeIndexList(), 0, 0);
 }
